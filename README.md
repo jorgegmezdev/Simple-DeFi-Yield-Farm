@@ -1,57 +1,98 @@
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
+# Ejercicio Simple DeFi Yield Farming
 
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+## Cómo usar Farms (Yield Farming) en PancakeSwap
+📖 [Documentación oficial](https://docs.pancakeswap.finance/products/yield-farming/how-to-use-farms)
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+---
 
-## Project Overview
+## Caso de uso
+En este ejercicio, implementarás un proyecto **DeFi simple de Token Farm**.
 
-This example project includes:
+La **Farm** debe permitir a los usuarios:
+- Realizar depósitos y retiros de un token mock **LP**.
+- Reclamar las recompensas generadas durante el staking.  
+  Estas recompensas son tokens de la plataforma:  
+  - **Nombre:** `DApp Token`  
+  - **Token:** `DAPP`
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+El contrato contiene el marco y comentarios necesarios para implementarlo.  
+Sigue los comentarios indicados para completarlo.
 
-## Usage
+---
 
-### Running Tests
+## Flujo del contrato `Simple Token Farm`
 
-To run all the tests in the project, execute the following command:
+- Los usuarios depositan tokens LP con la función **`deposit()`**.
+- Los usuarios reclaman recompensas con la función **`claimRewards()`**.
+- Los usuarios pueden deshacer el staking con la función **`withdraw()`**, pero aún pueden reclamar las recompensas pendientes.
+- Cada vez que se actualiza la cantidad de tokens LP en staking, las recompensas deben recalcularse primero.
+- El propietario puede llamar a **`distributeRewardsAll()`** a intervalos regulares para actualizar las recompensas de todos los usuarios en staking.
 
-```shell
-npx hardhat test
+---
+
+## Contratos
+
+- `LPToken.sol`: Contrato del token LP, utilizado para el staking.  
+- `DappToken.sol`: Contrato del token de la plataforma, utilizado como recompensa.  
+- `TokenFarm.sol`: Contrato principal de la Farm.  
+
+---
+
+## Requisitos
+
+1. Crear un nuevo proyecto **Hardhat** e incluir el contrato proporcionado.  
+2. Implementar todas las funciones, eventos y cualquier otro elemento mencionado en los comentarios del código.  
+3. Desplegar los contratos en un entorno local.  
+
+---
+
+## Puntos Extra (Bonus)
+
+### Bonus 1: Modifiers
+Crear `modifier`s que validen:
+- Si el llamador de la función es un usuario que está haciendo staking.  
+- Si el llamador de la función es el **owner** del contrato.  
+
+Añade los `modifier`s a las funciones que los requieran.  
+
+---
+
+### Bonus 2: Struct
+Crear un `struct` que contenga la información de staking de un usuario y reemplazar los siguientes mappings:
+
+```solidity
+mapping(address => uint256) public stakingBalance;
+mapping(address => uint256) public checkpoints;
+mapping(address => uint256) public pendigRewards;
+mapping(address => bool) public hasStaked;
+mapping(address => bool) public isStaking;
 ```
 
-You can also selectively run the Solidity or `mocha` tests:
+## Bonus 3: Pruebas
+Crea un archivo de pruebas para el contrato **Simple Token Farm** que permita verificar:
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
+- Acuñar (**mint**) tokens LP para un usuario y realizar un depósito de esos tokens.
+- Que la plataforma distribuya correctamente las recompensas a todos los usuarios en staking.
+- Que un usuario pueda reclamar recompensas y verificar que se transfirieron correctamente a su cuenta.
+- Que un usuario pueda deshacer el staking de todos los tokens LP depositados y reclamar recompensas pendientes, si las hay.
 
-### Make a deployment to Sepolia
+---
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+## Bonus 4: Recompensas variables por bloque
+- Transforma las recompensas por bloque en un rango.
+- Permite al propietario cambiar ese valor.
 
-To run the deployment to a local chain:
+---
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+## Bonus 5: Comisión (fee) de retiro
+- Cobra una comisión al momento de reclamar recompensas.
+- Agrega una función para que el propietario pueda retirar esa comisión.
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+---
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+## Bonus 6: Proxy (nuevo proyecto)
+Opciones:
+1. Implementa el **Bonus 5** como una versión **V2** de nuestro contrato de farming.
+2. Nuestra plataforma ha crecido y vamos a implementar farms para más tipos de tokens LP.
+   - ¿Cómo podemos resolver el despliegue de nuevos contratos de farming ahorrando gas?
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
